@@ -32,6 +32,7 @@ active_text = {}
 active_text.active = false
 events = {}
 win_game = 0
+resets = 0
 
 function spawn_house_scarecrows()
  wave_count += 1
@@ -853,19 +854,22 @@ function update_caught()
      sfx(0)
     else
      --initialize darkness start and end points
+     resets += 1
      caught_points = {}
      for i = 1,10 do
-      new_point = {}
-      new_point.sx = scarecrow.x + rand_int(5) - 2
-      new_point.sy = scarecrow.y + rand_int(6) - 10
-      new_point.ex = player.x + rand_int(6) - 2
-      new_point.ey = player.y + rand_int(8) - 8
-      new_point.completion = 0
-      new_point.color = rand_int(4)
-      if new_point.color == 0 then
-       new_point.color = 5
-      elseif new_point.color > 1 then
-       new_point.color = 0
+      new_point = {
+       sx = scarecrow.x + rand_int(5) - 2,
+       sy = scarecrow.y + rand_int(6) - 10,
+       ex = player.x + rand_int(6) - 2,
+       ey = player.y + rand_int(8) - 8,
+       completion = 0,
+       col = rand_int(4)
+      } --here here
+      
+      if new_point.col == 0 then
+       new_point.col = 5
+      elseif new_point.col > 1 then
+       new_point.col = 0
       end
       add(caught_points, new_point)
      end
@@ -900,8 +904,13 @@ end
 
 function reset_player_position()
  if active_map == 1 then
-  player.x = 34
-  player.y = 63
+  if resets > 1 then
+   player.x = 1000
+   player.y = 60
+  else
+   player.x = 34
+   player.y = 63
+  end
   player.direction = 1
  elseif active_map == 2 then
   player.x = 3
@@ -927,7 +936,7 @@ function draw_caught(n)
   --linear interpolation
   local endx = point.sx + point.completion*(point.ex - point.sx)
   local endy = point.sy + point.completion*(point.ey - point.sy)
-  line(point.sx, point.sy, endx, endy, point.color)
+  line(point.sx, point.sy, endx, endy, point.col)
  end
 end
 
@@ -1381,9 +1390,7 @@ end
 
 function init_map(n)
  player.resolve = 3
- active_map = n
- extra_fright = 0
- heartbeat_counter = 0
+ active_map, extra_fright, heartbeat_counter = n, 0, 0
  fill_active_trees(n)
  init_scarecrows(n)
  init_objects(n)
@@ -1396,22 +1403,14 @@ function init_map(n)
  --starting fright level
  fright = n*0.25 - 0.25
 
- --special event flags
- log_chopped = false
- scarecrows_spawned = false
- fence_chopped = 0
+ --event flags
+ log_chopped, scarecrows_spawned, fence_chopped, celar_chopped, event_timer, got_key, wave_count, left_door = false, false, 0, false, 0, false, 0, rand_boolean()
+
  mset(73, 13, 142)
  mset(73, 14, 158)
  mset(73, 15, 85)
- celar_chopped = false
  mset(5, 22, 224)
  mset(5, 23, 240)
-
- --ending flags
- event_timer = 0
- got_key = false
- wave_count = 0
- left_door = rand_boolean()
 end
 
 function init_scarecrows(n)
@@ -1471,7 +1470,7 @@ function init_scarecrows(n)
 
  elseif n == 4 then
   init_scarecrow_jump(82 + rand_int(54), 438, {74, 148, 372, 386}, 15)
-  init_scarecrow_jump(82 + rand_int(54), 198, {74, 148, 180, 198}, 10)
+  init_scarecrow_jump(82 + rand_int(54), 198, {74, 148, 180, 198}, 12)
   init_scarecrow_jump(82 + rand_int(54), 78, {74, 148, 70, 126}, 10)
 
   init_scarecrow_still(39, 999)
